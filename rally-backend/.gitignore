@@ -1,0 +1,34 @@
+# compiled output
+/dist
+/node_modules
+
+# logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# environment variables
+.env
+.env.local
+.env.*.local
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDEs
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# coverage
+coverage/
+*.lcov
+.nyc_output
+
+# prisma
+prisma/*.db
+prisma/*.db-journal

@@ -1,0 +1,152 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Category {
+  Gaming
+  Sports
+  Development
+  Learning
+  Creative
+  Social
+  Other
+}
+
+enum ActivityStatus {
+  Open
+  Full
+  Completed
+  Cancelled
+}
+
+enum ParticipantRole {
+  CREATOR
+  PARTICIPANT
+}
+
+enum ParticipantStatus {
+  JOINED
+  LEFT
+  ATTENDED
+  NO_SHOW
+}
+
+enum ReputationEventType {
+  INITIAL_CREDIT
+  ACTIVITY_COMPLETED
+  ATTENDED
+  HOSTED_SUCCESSFULLY
+  CANCELLED_LATE
+  NO_SHOW
+  FEEDBACK_POSITIVE
+  FEEDBACK_NEGATIVE
+  MANUAL_ADJUSTMENT
+}
+
+model User {
+  id                  String               @id @default(uuid())
+  walletAddress       String               @unique
+  username            String               @unique
+  bio                 String               @default("")
+  avatarUrl           String               @default("")
+  reputation          Int                  @default(100)
+  nonce               String?
+  nonceExpiresAt      DateTime?
+  badges              String[]             @default([])
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+
+  createdActivities   Activity[]           @relation("ActivityCreator")
+  participations      ActivityParticipant[]
+  notifications       Notification[]
+  reputationEvents    ReputationEvent[]
+
+  @@index([walletAddress])
+  @@index([username])
+}
+
+model Activity {
+  id               String                @id @default(uuid())
+  title            String
+  description      String
+  category         Category
+  location         String
+  date             String
+  time             String
+  duration         String
+  creatorId        String
+  creator          User                  @relation("ActivityCreator", fields: [creatorId], references: [id], onDelete: Cascade)
+  maxParticipants  Int
+  requirements     String[]              @default([])
+  status           ActivityStatus        @default(Open)
+  isOnline         Boolean               @default(false)
+  
+  solanaActivityId String?               @unique
+  activityPda      String?               @unique
+  txSignature      String?
+  
+  createdAt        DateTime              @default(now())
+  updatedAt        DateTime              @updatedAt
+
+  participants     ActivityParticipant[]
+
+  @@index([status])
+  @@index([category])
+  @@index([isOnline])
+  @@index([createdAt])
+  @@index([creatorId])
+}
+
+model ActivityParticipant {
+  id         String            @id @default(uuid())
+  activityId String
+  activity   Activity          @relation(fields: [activityId], references: [id], onDelete: Cascade)
+  userId     String
+  user       User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role       ParticipantRole   @default(PARTICIPANT)
+  status     ParticipantStatus @default(JOINED)
+  
+  participantPda  String?      @unique
+  joinTxSignature String?
+
+  joinedAt   DateTime          @default(now())
+  updatedAt  DateTime          @updatedAt
+
+  @@unique([activityId, userId])
+  @@index([activityId])
+  @@index([userId])
+  @@index([status])
+}
+
+model Notification {
+  id         String   @id @default(uuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  content    String
+  read       Boolean  @default(false)
+  activityId String?
+  createdAt  DateTime @default(now())
+
+  @@index([userId])
+  @@index([read])
+  @@index([createdAt])
+}
+
+model ReputationEvent {
+  id         String              @id @default(uuid())
+  userId     String
+  user       User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  activityId String?
+  eventType  ReputationEventType
+  change     Int
+  reason     String
+  createdAt  DateTime            @default(now())
+
+  @@index([userId])
+  @@index([createdAt])
+}
