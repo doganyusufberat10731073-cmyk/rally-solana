@@ -9,7 +9,7 @@ import type { Category } from '@/types';
 import { useRallyProgram } from '@/hooks/useRallyProgram';
 import { getActivityPda } from '@/services/solana/pda';
 import { BN } from '@coral-xyz/anchor';
-import { SystemProgram } from '@solana/web3.js';
+import { SystemProgram, PublicKey } from '@solana/web3.js';
 
 export function CreateActivity() {
   const [isSuccess, setIsSuccess] = useState(false);
@@ -25,20 +25,25 @@ export function CreateActivity() {
     setIsSubmitting(true);
     const formData = new FormData(e.currentTarget);
     try {
-      if (!program || !wallet) {
-        throw new Error("Wallet not connected");
+      const activePublicKey = wallet?.publicKey || (window as any).solana?.publicKey;
+      if (!activePublicKey) {
+        throw new Error("Wallet not connected. Please click 'Connect Wallet' in top right.");
+      }
+      if (!program) {
+        throw new Error("Solana Devnet connection is initializing. Please try again.");
       }
 
+      const creatorPubkey = new PublicKey(activePublicKey.toString());
       const activityId = new BN(Math.floor(Math.random() * 1_000_000_000));
       const maxParticipants = Number(formData.get('maxParticipants'));
       
-      const activityPda = getActivityPda(wallet.publicKey, BigInt(activityId.toString()));
+      const activityPda = getActivityPda(creatorPubkey, BigInt(activityId.toString()));
       
       const txSignature = await program.methods
         .createActivity(activityId, maxParticipants)
         .accounts({
           activity: activityPda,
-          creator: wallet.publicKey,
+          creator: creatorPubkey,
           systemProgram: SystemProgram.programId,
         })
         .rpc();

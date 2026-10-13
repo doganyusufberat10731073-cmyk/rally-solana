@@ -33,6 +33,9 @@ export interface Activity {
   participantUsers?: User[];
   isJoined?: boolean;
   isCreator?: boolean;
+  solanaActivityId?: string;
+  activityPda?: string;
+  txSignature?: string;
 }
 
 export interface Notification {
@@ -41,4 +44,6 @@ export interface Notification {
   content: string;
   timestamp: string;
   read: boolean;
+  activityId?: string;
 }
+

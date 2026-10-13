@@ -1,4 +1,5 @@
 import { PublicKey } from '@solana/web3.js';
+import { Buffer } from 'buffer';
 import { IDL } from './rally';
 
 export const PROGRAM_ID = new PublicKey('DkzLzgXKWj6yXkBYbEJEfP9ZSeQgcJjYs2e4hGueEPaW');

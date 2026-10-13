@@ -1,4 +1,4 @@
-import type { Activity, User } from '@/types';
+import type { Activity, User, Notification } from '@/types';
 import bs58 from 'bs58';
 
 const API_URL = (import.meta.env.VITE_API_URL || 'http://localhost:3001').replace(/\/$/, '');
@@ -50,4 +50,15 @@ export const api = {
   joinActivity: (id: string, data: { participantPda: string; txSignature: string }) => request<Activity>(`/activities/${id}/join`, { method: 'POST', body: JSON.stringify(data) }),
   getMyProfile: () => request<User>('/me/profile'),
   getMyActivities: (tab: 'joined' | 'created' | 'completed') => request<Activity[]>(`/me/activities?tab=${tab}`),
+  getNotifications: () => request<{ items: Notification[]; unreadCount: number }>('/notifications'),
+  markNotificationAsRead: (id: string) => request<Notification>(`/notifications/${id}/read`, { method: 'PATCH' }),
+  markAllNotificationsAsRead: () => request<void>('/notifications/read-all', { method: 'PATCH' }),
+  logout: async () => {
+    try {
+      await request('/auth/logout', { method: 'POST' });
+    } catch {
+      // ignore logout network errors
+    }
+    localStorage.removeItem('rally_access_token');
+  },
 };
